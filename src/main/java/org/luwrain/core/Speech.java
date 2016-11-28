@@ -96,7 +96,7 @@ class Speech
 	if (rate > 100)
 	    rate = 100;
 	defaultChannel.setDefaultRate(rate);
-	defaultChannel.setDefaultPitch(50);
+	defaultChannel.setDefaultPitch(pitch);
 	return true;
     }
 
