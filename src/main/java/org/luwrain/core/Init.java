@@ -225,10 +225,13 @@ public class Init
      * @param args The command line arguments mentioned by user on virtual machine launch
      */
     static public void main(String[] args) throws IOException
-    {                    
-	final PrintStream log = new PrintStream(new BufferedOutputStream(new FileOutputStream(Paths.get(System.getProperty("user.home")).resolve("luwrain-debug.txt").toFile())), true);
-    System.setOut(log);
-    System.setErr(log);
+    {
+   	if(args.length==0)
+   	{
+		final PrintStream log = new PrintStream(new BufferedOutputStream(new FileOutputStream(Paths.get(System.getProperty("user.home")).resolve("luwrain-debug.txt").toFile())), true);
+	    System.setOut(log);
+	    System.setErr(log);
+   	}
 
 	addJarsToClassPath("jar");
 	addJarsToClassPath("lib");
