@@ -18,6 +18,8 @@ package org.luwrain.core;
 
 import java.util.*;
 import java.io.*;
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.nio.file.*;
 
 import org.luwrain.os.OperatingSystem;
@@ -232,6 +234,17 @@ public class Init
 	    System.setOut(log);
 	    System.setErr(log);
    	}
+   	System.setProperty("file.encoding","UTF-8");
+   	Field charset;
+	try
+	{
+		charset=Charset.class.getDeclaredField("defaultCharset");
+	   	charset.setAccessible(true);
+	   	charset.set(null,null);
+	} catch(Exception e)
+	{
+		e.printStackTrace();
+	}
 
 	addJarsToClassPath("jar");
 	addJarsToClassPath("lib");
