@@ -1,18 +1,3 @@
-/*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of the LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.popups;
 
@@ -42,11 +27,8 @@ public class FilePopup extends EditListPopup
     {
 	super(luwrain, new Model(defPath, flags .contains(Flags.SKIP_HIDDEN)), 
 name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
-	//	this.path = path;
 	this.defPath = defPath;
 	this.acceptance = acceptance;
-	//	NullCheck.notNull(file, "file");
-	NullCheck.notNull(defPath, "defPath");
     }
 
     public Path result()
@@ -93,73 +75,56 @@ name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
 
     static protected class Model extends EditListPopupUtils.DynamicModel
     {
-	protected Path defPath;
-	protected boolean skipHidden = false;
+	protected final Path defPath;
+	protected final boolean skipHidden;
 
 	Model(Path defPath, boolean skipHidden)
 	{
-	    this.defPath = defPath;
-	    this.skipHidden = skipHidden;
 	    NullCheck.notNull(defPath, "defPath");
+	    this.defPath = defPath;
+	    if (!defPath.isAbsolute())
+		throw new IllegalArgumentException("defPath must be absolute");
+	    this.skipHidden = skipHidden;
 	}
 
 	@Override protected EditListPopup.Item[] getItems(String context)
 	{
-	    Path path = null;
-	    Path base = null;
-	    final String from = context != null?context:"";
-	    final Path fromPath = Paths.get(from);
-	    final boolean hadTrailingSlash = from.endsWith(separator());
-	    if (!from.isEmpty() && fromPath.isAbsolute())
+	    NullCheck.notNull(context, "context");
+	    if (context.isEmpty())
+		return readDirectory(defPath, defPath);
+	    final Path contextPath = Paths.get(context);
+	    NullCheck.notNull(contextPath, "contextPath");
+	    final Path base;
+	    Path path;
+	    if (contextPath.isAbsolute())
 	    {
 		base = null;
-		path = fromPath;
+		path = contextPath;
 	    } else
-		if (from.isEmpty())
-		{
-		    base = defPath;
-		    path = defPath;
-		} else
-		{
-		    base = defPath;
-		    path = defPath.resolve(fromPath);
-		}
-	    if (!from.isEmpty() && !hadTrailingSlash)
+	    {
+		base = defPath;
+		path = defPath.resolve(contextPath);
+	    }
+	    if (!context.endsWith(getSeparator()) && path.getParent() != null)
 		path = path.getParent();
 	    if (!Files.exists(path) || !Files.isDirectory(path))
 		return new Item[0];
-	    final LinkedList<Item> items = new LinkedList<Item>();
-	    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(path)) {
-		    for (Path pp : directoryStream) 
-			if (!skipHidden || !Files.isHidden(pp))
-			{
-			if (base != null)
-			    items.add(new Item(base.relativize(pp).toString(), pp.getFileName().toString())); else
-			    items.add(new Item(pp.toString(), pp.getFileName().toString()));
-			}
-		} 
-	    catch (IOException e) 
-	    {
-		e.printStackTrace();
-		return new Item[0];
-	    }
-	    final EditListPopup.Item[] res = items.toArray(new EditListPopup.Item[items.size()]);
-	    Arrays.sort(res);
-	    return res;
+	    return readDirectory(path, base);
 	}
 
 	@Override protected EditListPopup.Item getEmptyItem(String context)
 	{
-	    if (context == null || context.isEmpty())
+	    NullCheck.notNull(context, "context");
+	    if (context.isEmpty())
 		return new EditListPopup.Item();
 	    Path base = null;
 	    Path path = Paths.get(context);
 	    if (!path.isAbsolute())
 	    {
 		base = defPath;
-		path = base.resolve(path);
+		path = defPath.resolve(path);
 	    }
-	    if (context.endsWith(separator()) && Files.exists(path) && Files.isDirectory(path))
+	    if (context.endsWith(getSeparator()) && Files.exists(path) && Files.isDirectory(path))
 		return new EditListPopup.Item(context);
 	    path = path.getParent();
 	    if (path != null)
@@ -169,7 +134,7 @@ name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
 		if (Files.exists(path) && Files.isDirectory(path) && 
 		    !path.equals(path.getRoot()) &&
 		    (base == null || !base.equals(path)))
-		    suffix = separator();
+		    suffix = getSeparator();
 		if (base != null)
 		    return new EditListPopup.Item(base.relativize(path).toString() + suffix);
 		return new EditListPopup.Item(path.toString() + suffix);
@@ -180,26 +145,60 @@ name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
 	@Override public String getCompletion(String beginning)
 	{
 	    final String res = super.getCompletion(beginning);
-	    final String path = beginning + (res != null?res:"");
-	    if (!path.isEmpty() && path.endsWith(separator()))
+	    NullCheck.notNull(res, "res");
+	    /*
+	    final String path = beginning + (res;
+	    if (!path.isEmpty() && path.endsWith(getSeparator()))
 		return res;
 	    Path pp = Paths.get(path);
 	    if (!pp.isAbsolute())
 		pp = defPath.resolve(pp);
-	    if (Files.exists(pp) && Files.isDirectory(pp))
-		return res + separator();
+	    if (!Files.exists(pp) || !Files.isDirectory(pp))
+		return res;
+
+		return res + getSeparator();
 	    return res;
+	    */
+	    return "fixme";
+	}
+
+	protected Item[] readDirectory(Path path, Path base)
+	{
+	    NullCheck.notNull(path, "path");
+	    final LinkedList<Item> items = new LinkedList<Item>();
+	    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(path)) {
+		    for (Path pp : directoryStream) 
+			if (!skipHidden || !Files.isHidden(pp))
+			{
+			    if (base != null)
+				items.add(new Item(base.relativize(pp).toString(), pp.getFileName().toString())); else
+				items.add(new Item(pp.toString(), pp.getFileName().toString()));
+			}
+		    final Item[] res = items.toArray(new Item[items.size()]);
+		    Arrays.sort(res);
+		    return res;
+		}
+	    catch (IOException e) 
+	    {
+		Log.error("core", "unable to read content of " + path.toString() + ":" + e.getClass().getName() + ":" + e.getMessage());
+		e.printStackTrace();
+		return new Item[0];
+	    }
 	}
 
 	static String getPathWithTrailingSlash(Path p)
 	{
 	    NullCheck.notNull(p, "p");
+	    final String str = p.toString();
+	    //Checking if there is nothing to do
+	    if (str.endsWith(getSeparator()))
+		return str;
 	    if (Files.exists(p) && Files.isDirectory(p))
-		return p.toString() + separator();
-	    return p.toString();
+		return str + getSeparator();
+	    return str;
 	}
 
-	static private String separator()
+	static protected String getSeparator()
 	{
 	    return FileSystems.getDefault().getSeparator();
 	}

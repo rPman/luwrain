@@ -21,6 +21,9 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.nio.file.*;
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
+
 
 import org.luwrain.os.OperatingSystem;
 
@@ -355,6 +358,21 @@ public class Init
 	    }
 	catch(IOException e)
 	{
+	}
+    }
+
+    static private void setUtf8()
+    {
+	Log.debug("init", "using UTF-8, while default system charset was " + System.getProperty("file.encoding"));
+	System.setProperty("file.encoding","UTF-8");
+	Field charset;
+	try {
+	    charset=Charset.class.getDeclaredField("defaultCharset");
+	    charset.setAccessible(true);
+	    charset.set(null,null);
+	} catch(Exception e)
+	{
+	    e.printStackTrace();
 	}
     }
 }
