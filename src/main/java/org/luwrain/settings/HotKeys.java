@@ -93,13 +93,12 @@ class HotKeys extends ListArea implements SectionArea
     static private Item[] loadItems(Registry registry)
     {
 	NullCheck.notNull(registry, "registry");
-	final org.luwrain.core.RegistryKeys registryKeys = new org.luwrain.core.RegistryKeys();
 	final LinkedList<Item> res = new LinkedList<Item>();
-	for(String d: registry.getDirectories(registryKeys.globalKeys()))
+	for(String d: registry.getDirectories(Settings.GLOBAL_KEYS_PATH))
 	{
 	    if (d.trim().isEmpty())
 		continue;
-	    final String path = Registry.join(registryKeys.globalKeys(), d);
+	    final String path = Registry.join(Settings.GLOBAL_KEYS_PATH, d);
 	    res.add(new Item(Settings.createHotKey(registry, path), d));
 	}
 final Item[] toSort = res.toArray(new Item[res.size()]);

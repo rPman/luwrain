@@ -1,7 +1,7 @@
 /*
    Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the LUWRAIN.
+   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -19,19 +19,17 @@ package org.luwrain.desktop;
 import java.util.*;
 
 import org.luwrain.core.*;
-import org.luwrain.util.*;
 
 class UniRefList
 {
-    private Luwrain luwrain;
-    private Registry registry;
-    private final RegistryKeys registryKeys = new RegistryKeys();
+    private final Luwrain luwrain;
+    private final Registry registry;
     private UniRefInfo[] uniRefs = new UniRefInfo[0];
 
     UniRefList(Luwrain luwrain)
     {
-	this.luwrain = luwrain;
 	NullCheck.notNull(luwrain, "luwrain");
+	this.luwrain = luwrain;
 	this.registry = luwrain.getRegistry();
     }
 
@@ -42,7 +40,7 @@ class UniRefList
 
     void load()
     {
-	final String[] values = registry.getValues(registryKeys.desktopUniRefs());
+	final String[] values = registry.getValues(Settings.DESKTOP_UNIREFS_PATH);
 	final LinkedList<UniRefInfo> res = new LinkedList<UniRefInfo>();
 	for(String v: values)
 	{
@@ -102,16 +100,16 @@ class UniRefList
 
     void save()
     {
-	final String[] values = registry.getValues(registryKeys.desktopUniRefs());
+	final String[] values = registry.getValues(Settings.DESKTOP_UNIREFS_PATH);
 	if (values != null)
 	    for(String v: values)
-		registry.deleteValue(Registry.join(registryKeys.desktopUniRefs(), v));
+		registry.deleteValue(Registry.join(Settings.DESKTOP_UNIREFS_PATH, v));
 	for(int i = 0;i < uniRefs.length;++i)
 	{
 	    String name = "" + (i + 1);
 	    while (name.length() < 6)
 		name = "0" + name;
-	    registry.setString(Registry.join(registryKeys.desktopUniRefs(), name), uniRefs[i].value());
+	    registry.setString(Registry.join(Settings.DESKTOP_UNIREFS_PATH, name), uniRefs[i].value());
 	}
     }
 }

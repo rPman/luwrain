@@ -1,7 +1,7 @@
 /*
    Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the LUWRAIN.
+   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -23,15 +23,12 @@ import org.luwrain.controls.*;
 
 class Appearance implements ListArea.Appearance
 {
-    private Luwrain luwrain;
-    private Strings strings;
+    private final Luwrain luwrain;
 
-    public Appearance(Luwrain luwrain, Strings strings)
+    public Appearance(Luwrain luwrain)
     {
 	NullCheck.notNull(luwrain, "luwrain");
-	NullCheck.notNull(strings, "strings");
 	this.luwrain = luwrain;
-	this.strings = strings;
     }
 
     @Override public void announceItem(Object item, Set<Flags> flags)

@@ -1,7 +1,7 @@
 /*
    Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the LUWRAIN.
+   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -19,117 +19,98 @@ package org.luwrain.desktop;
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 import org.luwrain.controls.*;
+import org.luwrain.popups.Popups;
 
-public class App implements Application, Actions
+public class App implements Application
 {
-    static public final String STRINGS_NAME = "luwrain.desktop";
-
     private Luwrain luwrain;
-    private final TempStrings strings = new TempStrings();
-    private final Base base = new Base();
+    private Base base = null;
     private ListArea area;
 
     @Override public boolean onLaunch(Luwrain luwrain)
     {
+	NullCheck.notNull(luwrain, "luwrain");
 	this.luwrain = luwrain;
-	if (!base.init(luwrain, strings))
-	    return false;
+	base = new Base(luwrain);
 	createArea();
 	return true;
     }
 
-    @Override public String getAppName()
+    //Runs by the core when language extensions loaded 
+    public void ready()
     {
-	return strings.appName();
-    }
-
-    @Override public boolean onInsert(int x, int y, RegionContent data)
-    {
-	if (!base.insert(x, y, data))
-	    return false;
-	area.refresh();
-	return true;
-    }
-
-    @Override public boolean onDelete(int x, int y)
-    {
-	if (!base.delete(x, y))
-	    return false;
-	area.refresh();
-	return true;
-    }
-
-    @Override public boolean onClick(int index, Object obj)
-    {
-	if (!base.onClick(index, obj))
-	    return false;
-	area.refresh();
-	return  true;
-    }
-
-    public void ready(String lang, Object o)
-    {
-	if (o != null && (o instanceof Strings))
-	    this.strings.setStrings((Strings)o);
-	base.setReady(lang);
+	base.load();
+	luwrain.onAreaNewName(area);
     }
 
     private void createArea()
     {
-	final Luwrain l = luwrain;
-	final Actions actions = this;
-	final Strings s = strings;
-
-	final ListClickHandler handler = new ListClickHandler(){
-		@Override public boolean onListClick(ListArea area, int index,
-						     Object obj)
-		{
-		    return actions.onClick(index, obj);
-		}
-	    };
-
 	final ListArea.Params params = new ListArea.Params();
 	params.environment = new DefaultControlEnvironment(luwrain);
-	params.model = base.getModel();
-	params.appearance = base.getAppearance();
-	params.clickHandler = handler;
-	params.name = strings.appName();
+	params.model = base.model;
+	params.appearance = base.appearance;
+	params.name = luwrain.i18n().getStaticStr("Desktop");
 
 	area = new ListArea(params) {
-		      @Override public boolean onKeyboardEvent(KeyboardEvent event)
-		      {
-			  NullCheck.notNull(event, "event");
-			  if (event.isSpecial() && !event.isModified())
-			      switch(event.getSpecial())
-			      {
-			      case DELETE:
-				  return actions.onDelete(getHotPointX(), getHotPointY());
-			      }
+
+		@Override public boolean onKeyboardEvent(KeyboardEvent event)
+		{
+		    NullCheck.notNull(event, "event");
+		    if (event.isSpecial() && !event.isModified())
+			switch(event.getSpecial())
+			{ 
+			case DELETE:
+			    /*
+			    if (!Popups.confirmDefaultNo(luwrain, luwrain.i18n().getStaticStr("DesktopDeleteConfirmPopupName"), luwrain.i18n().getStaticStr("DesktopDeleteConfirmPopupText")))
+				return true;
+			    */
+			    if (base.delete(getHotPointX(), getHotPointY()))
+				refresh();
+			    return true;
+			}
 		    return super.onKeyboardEvent(event);
 		}
+
 		@Override public boolean onEnvironmentEvent(EnvironmentEvent event)
 		{
 		    NullCheck.notNull(event, "event");
 		    switch(event.getCode())
 		    {
 		    case CLOSE:
-			l.silence();
-			l.playSound(Sounds.NO_APPLICATIONS);
-			l.message(s.noApplications());
+			luwrain.silence();
+			luwrain.playSound(Sounds.NO_APPLICATIONS);
+			luwrain.message(luwrain.i18n().getStaticStr("DesktopNoApplication"));
 			return true;
 		    default:
 			return super.onEnvironmentEvent(event);
 		    }
 		}
-    @Override public boolean insertRegion(int x, int y, RegionContent data)
+
+		@Override public boolean insertRegion(int x, int y, RegionContent data)
 		{
-		    return actions.onInsert(x, y, data);
+		    if (!base.insert(x, y, data))
+			return false;
+		    refresh();
+		    return true;
 		}
+
 		@Override public String getAreaName()
 		{
-		    return strings.appName();
+		    return luwrain.i18n().getStaticStr("Desktop");
 		}
 	    };
+
+	area.setClickHandler((area, index, obj)->{
+		if (!base.onClick(index, obj))
+		    return false;
+		area.refresh();
+		return true;
+	    });
+    }
+
+    @Override public String getAppName()
+    {
+	return luwrain.i18n().getStaticStr("Desktop");
     }
 
     @Override public AreaLayout getAreasToShow()

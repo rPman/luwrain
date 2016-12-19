@@ -1,18 +1,3 @@
-/*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
-
-   This file is part of the LUWRAIN.
-
-   LUWRAIN is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public
-   License as published by the Free Software Foundation; either
-   version 3 of the License, or (at your option) any later version.
-
-   LUWRAIN is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
-*/
 
 package org.luwrain.controls;
 
@@ -47,8 +32,8 @@ public class FormArea  extends NavigationArea
     public enum Type { EDIT, CHECKBOX, LIST, STATIC, UNIREF, MULTILINE };
 
     protected final ControlEnvironment environment;
-    protected String name = "";
     protected final Vector<Item> items = new Vector<Item>();
+    protected String name = "";
 
     protected MutableLinesImpl multilineEditLines = null;
     protected final HotPointShift multilineEditHotPoint = new HotPointShift(this, 0, 0);
@@ -88,7 +73,7 @@ public class FormArea  extends NavigationArea
     public boolean hasItemWithName(String itemName)
     {
 	NullCheck.notNull(itemName, "itemName");
-	if (itemName.trim().isEmpty())
+	if (itemName.isEmpty())
 	    return false;
 	for(Item i: items)
 	    if (i.name.equals(itemName))
@@ -103,7 +88,7 @@ public class FormArea  extends NavigationArea
 	    return null;
 	if (index < items.size())
 	    return items.get(index).type;
-	return multilineEditActivated()?Type.MULTILINE:null;
+	return isMultilineEditActivated()?Type.MULTILINE:null;
     }
 
     public int getItemCount()
@@ -127,9 +112,7 @@ public class FormArea  extends NavigationArea
 
     public Object getItemObjByName(String itemName)
     {
-	NullCheck.notNull(itemName, "itemName");
-	if (itemName.trim().isEmpty())
-	    return null;
+	NullCheck.notEmpty(itemName, "itemName");
 	for(Item i: items)
 	    if (i.name.equals(itemName))
 		return i.obj;
@@ -138,33 +121,33 @@ public class FormArea  extends NavigationArea
 
     public boolean addEdit(String itemName, String caption)
     {
+	NullCheck.notEmpty(itemName, "itemName");
+	NullCheck.notNull(caption, "caption");
 	return addEdit(itemName, caption, "");
     }
 
-    public boolean addEdit(String itemName, String caption,
-			   String initialText)
+    public boolean addEdit(String itemName, String caption, String initialText)
     {
+	NullCheck.notEmpty(itemName, "itemName");
+	NullCheck.notNull(caption, "caption");
+	NullCheck.notNull(initialText, "initialText");
 	return addEdit(itemName, caption, initialText, null, true);
     }
 
     public boolean addEdit(String itemName, String caption,
 			   String initialText, Object obj, boolean enabled)
     {
-	NullCheck.notNull(itemName, "itemName");
+	NullCheck.notEmpty(itemName, "itemName");
 	NullCheck.notNull(caption, "caption");
 	NullCheck.notNull(initialText, "initialText");
-	if (itemName.trim().isEmpty() || hasItemWithName(itemName))
-	    return false;
-	final Item item = new Item(environment, this);
-	item.type = Type.EDIT;
-	item.name = itemName;
+	final Item item = new Item(environment, this, Type.EDIT, itemName);
 	item.caption = caption;
 	item.enteredText = initialText;
 	item.obj = obj;
 	item.enabled = enabled;
 	item.edit = new EmbeddedSingleLineEdit(environment, item, this, item.caption.length(), items.size());
 	items.add(item);
-	updateEditsPos();
+	updateControlsPos();
 	environment.onAreaNewContent(this);
 	environment.onAreaNewHotPoint(this);
 	return true;
@@ -207,13 +190,9 @@ public class FormArea  extends NavigationArea
     public boolean addUniRef(String itemName, String caption,
 			   String initialUniRef, Object obj, boolean enabled)
     {
-	NullCheck.notNull(itemName, "itemName");
+	NullCheck.notEmpty(itemName, "itemName");
 	NullCheck.notNull(caption, "caption");
-	if (itemName.trim().isEmpty() || hasItemWithName(itemName))
-	    return false;
-	final Item item = new Item(environment, this);
-	item.type = Type.UNIREF;
-	item.name = itemName;
+	final Item item = new Item(environment, this, Type.UNIREF, itemName);
 	item.caption = caption;
 	if (initialUniRef != null && !initialUniRef.trim().isEmpty())
 	{
@@ -222,11 +201,10 @@ public class FormArea  extends NavigationArea
 		return false;
 	} else
 	    item.uniRefInfo = null;
-
 	item.obj = obj;
 	item.enabled = enabled;
 	items.add(item);
-	updateEditsPos();
+	updateControlsPos();
 	environment.onAreaNewContent(this);
 	environment.onAreaNewHotPoint(this);
 	return true;
@@ -262,16 +240,14 @@ public class FormArea  extends NavigationArea
 	NullCheck.notNull(listChoosing, "listChoosing");
 	if (itemName.trim().isEmpty() || hasItemWithName(itemName))
 	    return false;
-	final Item item = new Item(environment, this);
-	item.type = Type.LIST;
-	item.name = itemName;
+	final Item item = new Item(environment, this, Type.LIST, itemName);
 	item.caption = caption;
 	item.selectedListItem = initialSelectedItem;
 	item.listChoosing = listChoosing;
 	item.obj = obj;
 	item.enabled = enabled;
 	items.add(item);
-	updateEditsPos();
+	updateControlsPos();
 	environment.onAreaNewContent(this);
 	environment.onAreaNewHotPoint(this);
 	return true;
@@ -295,15 +271,13 @@ public class FormArea  extends NavigationArea
 	NullCheck.notNull(caption, "caption");
 	if (itemName.trim().isEmpty() || hasItemWithName(itemName))
 	    return false;
-	final Item item = new Item(environment, this);
-	item.type = Type.CHECKBOX;
-	item.name = itemName;
+	final Item item = new Item(environment, this, Type.CHECKBOX, itemName);
 	item.caption = caption;
 	item.checkboxState = initialState;
 	item.obj = obj;
 	item.enabled = enabled;
 	items.add(item);
-	updateEditsPos();
+	updateControlsPos();
 	environment.onAreaNewContent(this);
 	environment.onAreaNewHotPoint(this);
 	return true;
@@ -334,13 +308,11 @@ public class FormArea  extends NavigationArea
 	NullCheck.notNull(caption, "caption");
 	if (itemName.trim().isEmpty() || hasItemWithName(itemName))
 	    return false;
-	final Item item = new Item(environment, this);
-	item.type = Type.STATIC;
-	item.name = itemName;
+	final Item item = new Item(environment, this, Type.STATIC, itemName);
 	    item.caption = caption;
 	    item.obj = obj;
 	    items.add(item);
-	    updateEditsPos();
+	    updateControlsPos();
 	environment.onAreaNewContent(this);
 	environment.onAreaNewHotPoint(this);
 	return true;
@@ -353,15 +325,19 @@ public class FormArea  extends NavigationArea
 	return addStatic(itemName, caption, "");
     }
 
-    public boolean multilineEditActivated()
+    public boolean isMultilineEditActivated()
     {
-	return multilineEdit != null && 
-	multilineEditModel != null && multilineEditCaption != null;
+	return multilineEdit != null && multilineEditModel != null && multilineEditCaption != null;
     }
 
-    public boolean multilineEditEnabled()
+    public boolean isMultilineEditEnabled()
     {
-	return multilineEditActivated() && multilineEditEnabled;
+	return isMultilineEditActivated() && multilineEditEnabled;
+    }
+
+    public boolean multilineEditHasCaption()
+    {
+	return multilineEditCaption != null && !multilineEditCaption.isEmpty();
     }
 
     /**
@@ -379,37 +355,35 @@ public class FormArea  extends NavigationArea
 	return multilineEditHotPoint;
     }
 
-    public boolean activateMultilineEdit(String caption, MultilineEditModel model,
-					  boolean enabled)
+    public boolean activateMultilineEdit(String caption, MultilineEditModel model, boolean enabled)
     {
 	NullCheck.notNull(caption, "caption");
 	NullCheck.notNull(model, "model");
-	if (multilineEditActivated())
+	if (isMultilineEditActivated())
 	    return false;
 	this.multilineEditCaption = caption;
 	this.multilineEditLines = null;
 	this.multilineEditModel = wrapMultilineEditModel(model);
 	this.multilineEdit = new MultilineEdit(environment, model);
 	multilineEditEnabled = enabled;
-	updateEditsPos();
+	updateControlsPos();
 	environment.onAreaNewContent(this);
 	environment.onAreaNewHotPoint(this);
 	return true;
     }
 
-    public boolean activateMultilineEdit(String caption, String lines,
-					  boolean enabled)
+    public boolean activateMultilineEdit(String caption, String lines, boolean enabled)
     {
 	NullCheck.notNull(caption, "caption");
 	NullCheck.notNull(lines, "lines");
-	if (multilineEditActivated())
+	if (isMultilineEditActivated())
 	    return false;
 	this.multilineEditCaption = caption;
 	this.multilineEditLines = new MutableLinesImpl(lines);
 	this.multilineEditModel = wrapMultilineEditModel(new MultilineEditModelTranslator(multilineEditLines, multilineEditHotPoint));
 	this.multilineEdit = new MultilineEdit(environment, multilineEditModel);
 	multilineEditEnabled = enabled;
-	updateEditsPos();
+	updateControlsPos();
 	environment.onAreaNewContent(this);
 	environment.onAreaNewHotPoint(this);
 	return true;
@@ -424,7 +398,7 @@ public class FormArea  extends NavigationArea
 
     public String getMultilineEditText()
     {
-	return multilineEditLines != null?multilineEditLines.getWholeText():null;
+	return multilineEditLines != null?multilineEditLines.getWholeText():"";
     }
 
     public boolean removeItemOnLine(int index)
@@ -432,7 +406,7 @@ public class FormArea  extends NavigationArea
 	if (index < 0 || index >= items.size())
 	    return false;
 	items.remove(index);
-	updateEditsPos();
+	updateControlsPos();
 	environment.onAreaNewContent(this);
 	environment.onAreaNewHotPoint(this);
 	return true;
@@ -447,7 +421,7 @@ public class FormArea  extends NavigationArea
 	    if (items.get(i).name.equals(itemName))
 	    {
 		items.remove(i);
-		updateEditsPos();
+		updateControlsPos();
 		environment.onAreaNewContent(this);
 		environment.onAreaNewHotPoint(this);
 		return true;
@@ -470,7 +444,6 @@ public class FormArea  extends NavigationArea
 		return true;
 	    }
 	}
-
 	if (	    event.isSpecial() && event.getSpecial() == KeyboardEvent.Special.ENTER &&
 		    !event.isModified())
 	{
@@ -517,7 +490,7 @@ public class FormArea  extends NavigationArea
 		i.enabled && i.edit.isPosCovered(getHotPointX(), getHotPointY()) &&
 		i.onKeyboardEvent(event))
 		return true;
-	if (multilineEditEnabled() && isMultilineEditCovering(getHotPointX(), getHotPointY()) &&
+	if (isMultilineEditEnabled() && isMultilineEditCovering(getHotPointX(), getHotPointY()) &&
 	    multilineEdit.onKeyboardEvent(event))
 	    return true;
 	return super.onKeyboardEvent(event);
@@ -525,7 +498,10 @@ public class FormArea  extends NavigationArea
 
     @Override public boolean onEnvironmentEvent(EnvironmentEvent event)
     {
-	//Insert command for a uniref;
+	NullCheck.notNull(event, "event");
+	if (event.getType() != EnvironmentEvent.Type.REGULAR)
+	    return super.onEnvironmentEvent(event);
+	//Insert command for a uniref
 	if (event.getCode() == EnvironmentEvent.Code.INSERT && (event instanceof InsertEvent))
 	{
 	    final int index = getHotPointY();
@@ -543,15 +519,12 @@ public class FormArea  extends NavigationArea
 		environment.onAreaNewContent(this);
 		return true;
 	    }
-
 	}
-
 	for(Item i: items)
-		if (i.type == Type.EDIT && i.edit != null &&
-		    i.enabled && i.edit.isPosCovered(getHotPointX(), getHotPointY()) &&
-		    i.onEnvironmentEvent(event))
-		    return true;
-	if (multilineEditEnabled() && isMultilineEditCovering(getHotPointX(), getHotPointY()) &&
+	    if (i.isEnabledEdit() && i.edit.isPosCovered(getHotPointX(), getHotPointY()) &&
+		i.onEnvironmentEvent(event))
+		return true;
+	if (isMultilineEditEnabled() && isMultilineEditCovering(getHotPointX(), getHotPointY()) &&
 	    multilineEdit.onEnvironmentEvent(event))
 	    return true;
 	return super.onEnvironmentEvent(event);
@@ -559,12 +532,12 @@ public class FormArea  extends NavigationArea
 
     @Override public boolean onAreaQuery(AreaQuery query)
     {
+	NullCheck.notNull(query, "query");
 	for(Item i: items)
-		if (i.type == Type.EDIT && i.edit != null &&
-		    i.enabled && i.edit.isPosCovered(getHotPointX(), getHotPointY()) &&
+	    if (i.isEnabledEdit() && i.edit.isPosCovered(getHotPointX(), getHotPointY()) &&
 		    i.onAreaQuery(query))
 		    return true;
-	if (multilineEditEnabled() && isMultilineEditCovering(getHotPointX(), getHotPointY()) &&
+	if (isMultilineEditEnabled() && isMultilineEditCovering(getHotPointX(), getHotPointY()) &&
 	    multilineEdit.onAreaQuery(query))
 	    return true;
 	return super.onAreaQuery(query);
@@ -573,13 +546,13 @@ public class FormArea  extends NavigationArea
     @Override public int getLineCount()
     {
 	int res = items.size();
-	if (!multilineEditActivated())
+	if (!isMultilineEditActivated())
 	    return res + 1;
 	final int count = multilineEditModel.getLineCount();
 	res += count;
 	if (count == 0)
 	    ++res;
-	if (multilineEditCaption != null && !multilineEditCaption.isEmpty())
+	if (multilineEditHasCaption())
 	    ++res;
 	return res;
     }
@@ -607,10 +580,10 @@ public class FormArea  extends NavigationArea
 		return "FIXME";
 	    }
 	}
-	if (!multilineEditActivated())
+	if (!isMultilineEditActivated())
 	    return "";
 	final int pos = index - items.size();
-	if (!multilineEditCaption.isEmpty())
+	if (multilineEditHasCaption())
 	{
 	    if (pos == 0)
 		return multilineEditCaption;
@@ -635,24 +608,42 @@ public class FormArea  extends NavigationArea
 	//FIXME:	environment.onNewAreaName(this);
     }
 
-    private void updateEditsPos()
+    protected Item findItemByIndex(int index)
+    {
+	if (index < 0 || index >= items.size())
+	    return null;
+	return items.get(index);
+    }
+
+    protected Item findItemByName(String itemName)
+    {
+	NullCheck.notEmpty(itemName, "itemName");
+	for(Item i: items)
+	    if (i.name.equals(itemName))
+		return i;
+	return null;
+    }
+
+    protected void updateControlsPos()
     {
 	for(int i = 0;i < items.size();++i)
 	    if (items.get(i).type == Type.EDIT)
 	    {
 		final Item item = items.get(i);
-		item.edit.setNewPos(item.caption != null?item.caption.length():0, i);
+		item.edit.setNewPos(item.caption.length(), i);
 	    }
-	if (!multilineEditActivated())
+	if (!isMultilineEditActivated())
 	    return;
 	int offset = items.size();
-	if (multilineEditCaption != null && !multilineEditCaption.isEmpty())
+	if (multilineEditHasCaption())
 	    ++offset;
 	multilineEditHotPoint.setOffsetY(offset);
     }
 
-    private MultilineEditModel wrapMultilineEditModel(MultilineEditModel model)
+    //Adds listener to notify about multiline edit text or hot point changing
+    protected MultilineEditModel wrapMultilineEditModel(MultilineEditModel model)
     {
+	NullCheck.notNull(model, "model");
 	final ControlEnvironment env = environment;
 	final Area thisArea = this;
 	return new MultilineEditModelChangeListener(model){
@@ -664,7 +655,7 @@ public class FormArea  extends NavigationArea
 	};
     }
 
-    private boolean isMultilineEditCovering(int x, int y)
+    protected boolean isMultilineEditCovering(int x, int y)
     {
 	return x >= multilineEditHotPoint.offsetX() && y >= multilineEditHotPoint.offsetY();
     }
@@ -676,15 +667,15 @@ public class FormArea  extends NavigationArea
 
     static protected class Item implements EmbeddedEditLines
     {
-	Type type;
-	String name;
+	final Type type;
+	final String name;
 	String caption;
 	Object obj;
 	boolean enabled = true;
 
 //A couple of variables needed for sending notifications about changing of text
-	protected ControlEnvironment environment;
-	protected Area area;
+	protected final ControlEnvironment environment;
+	protected final Area area;
 
 	//For edits
 	protected String enteredText = "";
@@ -699,12 +690,17 @@ protected ListChoosing listChoosing;
 	//For checkboxes
 	boolean checkboxState;
 
-	Item(ControlEnvironment environment, Area area)
+	Item(ControlEnvironment environment, Area area, 
+Type type, String name)
 	{
 	    NullCheck.notNull(environment, "environment");
 	    NullCheck.notNull(area, "area");
+	    NullCheck.notNull(type, "type");
+	    NullCheck.notNull(name, "name");
 	    this.environment = environment;
 	    this.area = area;
+	    this.type = type;
+	    this.name = name;
 	}
 
 	boolean onKeyboardEvent(KeyboardEvent event)
@@ -722,6 +718,11 @@ protected ListChoosing listChoosing;
 	    return edit != null?edit.onAreaQuery(query):false;
 	}
 
+	boolean isEnabledEdit()
+	{
+	    return type == Type.EDIT && edit != null && enabled;
+	}
+
 	@Override public String getEmbeddedEditLine(int editPosX, int editPosY)
 	{
 	    //We may skip checking of editPosX and editPosY because there is only one edit to call this method;
@@ -736,5 +737,4 @@ protected ListChoosing listChoosing;
 	    environment.onAreaNewContent(area);
 	}
     }
-
 }
