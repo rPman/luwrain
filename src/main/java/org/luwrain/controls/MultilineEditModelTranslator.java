@@ -1,3 +1,18 @@
+/*
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+
+   This file is part of LUWRAIN.
+
+   LUWRAIN is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public
+   License as published by the Free Software Foundation; either
+   version 3 of the License, or (at your option) any later version.
+
+   LUWRAIN is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+*/
 
 package org.luwrain.controls;
 
@@ -6,7 +21,7 @@ import org.luwrain.core.*;
 // Expects that hot point is not related to the content 
 // Hot point position may be adjusted to the content changes only on endEditTrans 
 
-public class MultilineEditModelTranslator implements MultilineEditModel
+public class MultilineEditModelTranslator implements MultilineEdit.Model
 {
     protected final MutableLines lines;
     protected final HotPointControl hotPoint;
@@ -191,12 +206,12 @@ public class MultilineEditModelTranslator implements MultilineEditModel
 
     @Override public void insertChars(int pos, int lineIndex, String str)
     {
+	NullCheck.notNull(str, "str");
 	beginEditTrans();
 	while(lineIndex >= lines.getLineCount())
 	    lines.addLine("");
 	String line = lines.getLine(lineIndex);
-	if (line == null)
-	    line = "";
+	NullCheck.notNull(line, "line");
 	while(line.length() < pos)
 	    line += " ";
 	lines.setLine(lineIndex, line.substring(0, pos) + (str != null?str:"") + line.substring(pos));

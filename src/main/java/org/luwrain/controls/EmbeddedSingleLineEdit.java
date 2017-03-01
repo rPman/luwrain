@@ -1,7 +1,7 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the LUWRAIN.
+   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -19,7 +19,7 @@ package org.luwrain.controls;
 import org.luwrain.core.*;
 import org.luwrain.core.events.*;
 
-public class EmbeddedSingleLineEdit implements SingleLineEditModel
+public class EmbeddedSingleLineEdit implements SingleLineEdit.Model
 {
     protected final ControlEnvironment environment;
     protected final SingleLineEdit edit;

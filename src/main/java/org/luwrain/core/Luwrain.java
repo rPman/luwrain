@@ -20,6 +20,7 @@ import java.util.*;
 import java.io.*;
 import java.nio.file.*;
 
+import org.luwrain.base.*;
 import org.luwrain.core.events.*;
 import org.luwrain.core.queries.*;
 import org.luwrain.speech.Channel;
@@ -52,7 +53,7 @@ import org.luwrain.speech.Channel;
  * of access.  It is necessary to make extensions using more accurate and
  * transparent.
  */
-public final class Luwrain implements EventConsumer, org.luwrain.base.CoreProperties
+public final class Luwrain implements org.luwrain.base.EventConsumer, org.luwrain.base.CoreProperties
 {
     public enum ReloadComponents {
 	ENVIRONMENT_SOUNDS,
@@ -247,6 +248,13 @@ public final class Luwrain implements EventConsumer, org.luwrain.base.CoreProper
 	NullCheck.notNull(text, "text");
 	environment.message(text, semantic);
     }
+
+    public void message(String text, Sounds sound)
+    {
+	NullCheck.notNull(text, "text");
+	environment.message(text, sound);
+    }
+
 
     /**
      * Notifies the environment that the area gets new position of the hot
@@ -690,5 +698,10 @@ public final class Luwrain implements EventConsumer, org.luwrain.base.CoreProper
 	    }
 	    return environment.getCoreProperties().getProperty(propName);
 	}
+    }
+
+public FilesOperations getFilesOperations()
+    {
+	return environment.getFilesOperations();
     }
 }

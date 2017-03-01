@@ -1,7 +1,7 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the LUWRAIN.
+   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -31,11 +31,20 @@ import org.luwrain.util.*;
  */
 public class SingleLineEdit implements RegionProvider
 {
+    public interface Model
+    {
+	String getLine();
+	void setLine(String text);
+	int getHotPointX();
+	void setHotPointX(int value);
+	String getTabSeq();
+    }
+
     protected final ControlEnvironment environment;
     protected final RegionTranslator region = new RegionTranslator(this);
-    protected final SingleLineEditModel model;
+    protected final Model model;
 
-    public SingleLineEdit(ControlEnvironment environment, SingleLineEditModel model)
+    public SingleLineEdit(ControlEnvironment environment, Model model)
     {
 	NullCheck.notNull(environment, "environment");
 	NullCheck.notNull(model, "model");

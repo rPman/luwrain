@@ -1,3 +1,18 @@
+/*
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+
+   This file is part of LUWRAIN.
+
+   LUWRAIN is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public
+   License as published by the Free Software Foundation; either
+   version 3 of the License, or (at your option) any later version.
+
+   LUWRAIN is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+*/
 
 package org.luwrain.controls;
 
@@ -5,7 +20,7 @@ import org.luwrain.core.*;
 
 /**
  * Implements a listener of all changes in 
- * {@link MultilineEditModel}. This class contains the abstract method 
+ * {@link MultilineEdit.Model}. This class contains the abstract method 
  * {@code onMultilineEditChange} called each time when any changes occurred in
  * the state of the model.  This allows users to implement any necessary
  * actions, which should have effect if and only if something was changed
@@ -14,11 +29,11 @@ import org.luwrain.core.*;
  *
  * @see MultilineEdit
  */
-abstract public class MultilineEditModelChangeListener implements MultilineEditModel
+abstract public class MultilineEditModelChangeListener implements MultilineEdit.Model
 {
-    private final MultilineEditModel model;
+    private final MultilineEdit.Model model;
 
-    public MultilineEditModelChangeListener(MultilineEditModel model)
+    public MultilineEditModelChangeListener(MultilineEdit.Model model)
     {
 	NullCheck.notNull(model, "model");
 	this.model = model;

@@ -1,5 +1,5 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
    This file is part of LUWRAIN.
 
@@ -23,8 +23,7 @@ import org.luwrain.core.events.*;
 import org.luwrain.core.queries.*;
 import org.luwrain.core.extensions.*;
 import org.luwrain.popups.*;
-import org.luwrain.os.OperatingSystem;
-import org.luwrain.hardware.*;
+import org.luwrain.base.*;
 
 class Environment extends EnvironmentAreas
 {
@@ -71,14 +70,20 @@ class Environment extends EnvironmentAreas
 	if (!greeting.trim().isEmpty())
 	    try {
 		Thread.sleep(1000);
-		message(greeting, Luwrain.MESSAGE_REGULAR);
+		speech.speak(greeting, 0, 0);
 	    } catch (InterruptedException ie)
 	    {
 		Thread.currentThread().interrupt();
 	    }
 	soundManager.startingMode();
 	eventLoop(new InitialEventLoopStopCondition());
-	Log.debug("core", "event loop finished");
+	playSound(Sounds.SHUTDOWN);
+	    try {
+		Thread.sleep(2500);//FIXME:
+	    } catch (InterruptedException ie)
+	    {
+		Thread.currentThread().interrupt();
+	    }
 	interaction.stopInputEventsAccepting();
 	extensions.close();
 	Log.debug("core", "environment closed");
@@ -728,39 +733,31 @@ onNewAreasLayout();
 
     void message(String text, int semantic)
     {
-	if (text == null || text.trim().isEmpty())
-	    return;
-	needForIntroduction = false;
 	switch(semantic)
 	{
 	case Luwrain.MESSAGE_ERROR:
-	    playSound(Sounds.ERROR);
+	    message(text, Sounds.ERROR);
 	    break;
 	case Luwrain.MESSAGE_OK:
-	    playSound(Sounds.OK);
+	    message(text, Sounds.OK);
 	    break;
 	case Luwrain.MESSAGE_DONE:
-	    playSound(Sounds.DONE);
+	    message(text, Sounds.DONE);
 	    break;
 	case Luwrain.MESSAGE_NOT_READY:
-	    playSound(Sounds.BLOCKED);
+	    message(text, Sounds.BLOCKED);
 	    break;
+	default:
+	    message(text,Sounds.MESSAGE);
 	}
-	//	speechProc.silence();
-	speech.speak(text, Luwrain.PITCH_MESSAGE, 0);
-	interaction.startDrawSession();
-	interaction.clearRect(0, interaction.getHeightInCharacters() - 1, interaction.getWidthInCharacters() - 1, interaction.getHeightInCharacters() - 1);
-	interaction.drawText(0, interaction.getHeightInCharacters() - 1, text, true);
-	interaction.endDrawSession();
     }
 
     void message(String text, Sounds sound)
     {
-	NullCheck.notNull(text, "text");
-	NullCheck.notNull(sound, "sound");
-	if (text.trim().isEmpty())
+	if (text == null || text.trim().isEmpty())
 	    return;
 	needForIntroduction = false;
+	if (sound != null)
 	    playSound(sound);
 	speech.speak(text, Luwrain.PITCH_MESSAGE, 0);
 	interaction.startDrawSession();
@@ -1075,5 +1072,10 @@ onNewAreasLayout();
     String[] getAllShortcutNames()
     {
 	return shortcuts.getShortcutNames();
+    }
+
+    FilesOperations getFilesOperations()
+    {
+	return os.getFilesOperations();
     }
 }

@@ -74,19 +74,12 @@ public class CommanderPopup extends CommanderArea implements CommanderArea.Click
 	    switch(event.getChar())
 	    {
 	    case '=':
-		setFilter(new CommanderUtils.AllFilesFilter());
+		setCommanderFilter(new CommanderUtils.AllFilesFilter());
 		refresh();
 		return true;
 	    case '-':
-		setFilter(new CommanderUtils.NoHiddenFilter());
+		setCommanderFilter(new CommanderUtils.NoHiddenFilter());
 		refresh();
-		return true;
-	    }
-	if (event.isSpecial() && event.withAltOnly())
-	    switch(event.getSpecial())
-	    {
-	    case ENTER:
-		openMountedPartitions();
 		return true;
 	    }
 	return super.onKeyboardEvent(event);
@@ -95,8 +88,13 @@ public class CommanderPopup extends CommanderArea implements CommanderArea.Click
     @Override public boolean onEnvironmentEvent(EnvironmentEvent event)
     {
 	NullCheck.notNull(event, "event");
+	if (event.getType() != EnvironmentEvent.Type.REGULAR)
+	    return super.onEnvironmentEvent(event);
 	switch(event.getCode())
 	{
+	case PROPERTIES:
+	    openMountedPartitions();
+	    return true;
 	case OK:
 	    result = opened();
 	    closing.doOk();
@@ -142,7 +140,7 @@ public class CommanderPopup extends CommanderArea implements CommanderArea.Click
 
     private void openMountedPartitions()
     {
-	final org.luwrain.hardware.Partition part = Popups.mountedPartitions(luwrain, popupFlags);
+	final org.luwrain.base.Partition part = Popups.mountedPartitions(luwrain, popupFlags);
 	if (part == null)
 	    return;
 	open(part.file().toPath(), null);
@@ -155,7 +153,7 @@ public class CommanderPopup extends CommanderArea implements CommanderArea.Click
 	params.environment = new DefaultControlEnvironment(luwrain);
 	params.appearance = new CommanderUtils.DefaultAppearance(params.environment);
 	//    public CommanderArea.ClickHandler clickHandler;
-	params.selecting = false;
+	//	params.selecting = false;
 	params.filter = new CommanderUtils.NoHiddenFilter();
 	params.comparator = new CommanderUtils.ByNameComparator();
 	return params;

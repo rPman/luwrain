@@ -26,7 +26,7 @@ public class FilePopup extends EditListPopup
 		     Set<Flags> flags, Set<Popup.Flags> popupFlags)
     {
 	super(luwrain, new Model(defPath, flags .contains(Flags.SKIP_HIDDEN)), 
-name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
+name, prefix, getPathWithTrailingSlash(path), popupFlags);
 	this.defPath = defPath;
 	this.acceptance = acceptance;
     }
@@ -39,16 +39,18 @@ name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
 	return defPath.resolve(res);
     }
 
-    @Override public boolean onKeyboardEvent(KeyboardEvent event)
+    @Override public boolean onEnvironmentEvent(EnvironmentEvent event)
     {
 	NullCheck.notNull(event, "event");
-	if (event.isSpecial() && event.withAltOnly())
-	    switch(event.getSpecial())
-	    {
-	    case 	    ENTER:
-		return openCommanderPopup();
-	    }
-	return super.onKeyboardEvent(event);
+	if (event.getType() != EnvironmentEvent.Type.REGULAR)
+	    return super.onEnvironmentEvent(event);
+	switch(event.getCode())
+	{
+	case PROPERTIES:
+	    return openCommanderPopup();
+	default:
+	    return super.onEnvironmentEvent(event);
+	}
     }
 
     @Override public boolean onOk()
@@ -58,7 +60,7 @@ name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
 	return acceptance != null?acceptance.pathAcceptable(result()):true;
     }
 
-    private boolean openCommanderPopup()
+    protected boolean openCommanderPopup()
     {
 	Path path = result();
 	if (path == null)
@@ -71,6 +73,23 @@ name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
 	if (res != null)
 	    setText(res.toString(), "");
 	return true;
+    }
+
+    static String getPathWithTrailingSlash(Path p)
+    {
+	NullCheck.notNull(p, "p");
+	final String str = p.toString();
+	//Checking if there is nothing to do
+	if (str.endsWith(getSeparator()))
+	    return str;
+	if (Files.exists(p) && Files.isDirectory(p))
+	    return str + getSeparator();
+	return str;
+    }
+
+    static protected String getSeparator()
+    {
+	return FileSystems.getDefault().getSeparator();
     }
 
     static protected class Model extends EditListPopupUtils.DynamicModel
@@ -142,24 +161,25 @@ name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
 	    return new EditListPopup.Item(context);
 	}
 
+	//Just adds ending slash, if necessary
 	@Override public String getCompletion(String beginning)
 	{
 	    final String res = super.getCompletion(beginning);
 	    NullCheck.notNull(res, "res");
-	    /*
-	    final String path = beginning + (res;
+	    final String path = beginning + res;
+					     //We already have the slash, doing nothing
 	    if (!path.isEmpty() && path.endsWith(getSeparator()))
 		return res;
 	    Path pp = Paths.get(path);
 	    if (!pp.isAbsolute())
 		pp = defPath.resolve(pp);
+					     final boolean withSlash;
 	    if (!Files.exists(pp) || !Files.isDirectory(pp))
-		return res;
-
+		withSlash = false; else
+		withSlash = true;
+	    if (withSlash && !hasWithSameBeginningNearby(pp))
 		return res + getSeparator();
 	    return res;
-	    */
-	    return "fixme";
 	}
 
 	protected Item[] readDirectory(Path path, Path base)
@@ -186,21 +206,32 @@ name, prefix, Model.getPathWithTrailingSlash(path), popupFlags);
 	    }
 	}
 
-	static String getPathWithTrailingSlash(Path p)
+	protected boolean hasWithSameBeginningNearby(Path path)
 	{
-	    NullCheck.notNull(p, "p");
-	    final String str = p.toString();
-	    //Checking if there is nothing to do
-	    if (str.endsWith(getSeparator()))
-		return str;
-	    if (Files.exists(p) && Files.isDirectory(p))
-		return str + getSeparator();
-	    return str;
+	    NullCheck.notNull(path, "path");
+	    final Path parent = path.getParent();
+	    if (parent == null)
+		return false;
+	    final String fileName = path.getFileName().toString();
+	    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(parent)) {
+		    for (Path pp : directoryStream) 
+			if (!skipHidden || !Files.isHidden(pp))
+			{
+			    final Path f = pp.getFileName();
+			    if (f == null)
+				continue;
+			    final String name = f.toString();
+			    if (name.length() > fileName.length() && name.startsWith(fileName))
+				return true;
+			}
+		    return false;
 	}
-
-	static protected String getSeparator()
-	{
-	    return FileSystems.getDefault().getSeparator();
+	    catch (IOException e) 
+	    {
+		Log.error("core", "unable to read content of " + path.toString() + ":" + e.getClass().getName() + ":" + e.getMessage());
+		e.printStackTrace();
+		return false;
+	    }
 	}
     }
 }

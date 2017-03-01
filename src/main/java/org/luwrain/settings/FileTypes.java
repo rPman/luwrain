@@ -65,7 +65,7 @@ class FileTypes extends ListArea implements SectionArea
 	super(params);
 	NullCheck.notNull(controlPanel, "controlPanel");
 	this.controlPanel = controlPanel;
-	setClickHandler((area, index, obj)->editItem(obj));
+	setListClickHandler((area, index, obj)->editItem(obj));
     }
 
     @Override public boolean onKeyboardEvent(KeyboardEvent event)
@@ -123,9 +123,9 @@ class FileTypes extends ListArea implements SectionArea
 	final Luwrain luwrain = controlPanel.getCoreInterface();
 	final ListArea.Params params = new ListArea.Params();
 	params.environment = new DefaultControlEnvironment(luwrain);
-	params.appearance = new DefaultListItemAppearance(params.environment);
+	params.appearance = new ListUtils.DefaultAppearance(params.environment);
 	params.name = "Типы файлов";
-	params.model = new FixedListModel(loadItems(luwrain.getRegistry()));
+	params.model = new ListUtils.FixedModel(loadItems(luwrain.getRegistry()));
 	return new FileTypes(controlPanel, params);
     }
 }

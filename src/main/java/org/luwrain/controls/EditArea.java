@@ -1,7 +1,7 @@
 /*
-   Copyright 2012-2016 Michael Pozhidaev <michael.pozhidaev@gmail.com>
+   Copyright 2012-2017 Michael Pozhidaev <michael.pozhidaev@gmail.com>
 
-   This file is part of the LUWRAIN.
+   This file is part of LUWRAIN.
 
    LUWRAIN is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public
@@ -32,7 +32,7 @@ public class EditArea extends SimpleArea
 	NullCheck.notNull(environment, "environment");
 	this.environment = environment;
 	this.listener = listener;
-	edit = new MultilineEdit(environment, new MultilineEditModelChangeListener(new MultilineEditModelTranslator(this, this)){
+	edit = new MultilineEdit(environment, new MultilineEditModelChangeListener(new MultilineEditModelTranslator(super.content, this)){
 		@Override public void onMultilineEditChange()
 		{
 		    if (listener != null)
